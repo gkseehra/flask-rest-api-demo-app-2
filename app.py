@@ -30,8 +30,15 @@ class Item(Resource):
         return item, 201
 
 
-api.add_resource(Item, '/item/<string:name>')
+class ItemList(Resource):
+    def get(self):
+        if len(items) == 0:
+            return {'message': 'No items to see here.'}, 404
+        return items
 
+
+api.add_resource(Item, '/item/<string:name>')
+api.add_resource(ItemList, '/items')
 app.run(port=5000, debug=True)
 # Before coding the apis create requests in postman, this will help in determining the api structures.
 
