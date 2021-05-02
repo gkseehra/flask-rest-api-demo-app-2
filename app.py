@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 
 # Resource is something that our API represents
 # For example, if our API is concerned with Students,
@@ -18,13 +18,20 @@ items = []
 # Item Resource
 class Item(Resource):
     def get(self, name):
-        for item in items:
-            if item['name'] == name:
-                return item
-        return {'item': None}, 404
+        item = next(filter(lambda x: x['name'] == name, items), None)
+        return {'item': item}, 200 if item else 404
 
     def post(self, name):
-        item = {'name': name, 'price': 13.99}
+        if next(filter(lambda x: x['name'] == name, items), None) is not None:
+            return {'message': f'An item with the {name} already exists.'}, 400
+        # If the request does not have JSON attached or
+        # if the content-type is set wrong in the header,
+        # the below line will give an error.
+        request_data = request.get_json()
+        # To overcome that problem - 2 ways -
+        # 1. pass force=True--> will process the data even if the content-type is not set.
+        # 2. pass silent=True--> will just return None.
+        item = {'name': name, 'price': request_data['price']}
         items.append(item)
         # No need to convert dictionary to JSON, flask_restful takes care of it.
         return item, 201
@@ -47,3 +54,4 @@ app.run(port=5000, debug=True)
 # 404 resource not found
 # 201 resource created
 # 202 resource creation request accepted
+# 400 bad request
