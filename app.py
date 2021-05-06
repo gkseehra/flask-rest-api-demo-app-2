@@ -7,16 +7,25 @@ from flask import Flask, request
 # Resources are usually mapped into database tables as well.
 
 from flask_restful import Resource, Api
+# JWT -> JSON Web Token
+from flask_jwt import JWT, jwt_required
+from security import authenticate, identity
+
 
 app = Flask(__name__)
+
+app.secret_key = 'gurleen'
 # The Api works with resources and every resource has to be a class.
 api = Api(app)
+# JWT creates a new endpoint -> /auth
+jwt = JWT(app, authenticate, identity)
 
 items = []
 
 
 # Item Resource
 class Item(Resource):
+    @jwt_required()
     def get(self, name):
         item = next(filter(lambda x: x['name'] == name, items), None)
         return {'item': item}, 200 if item else 404
