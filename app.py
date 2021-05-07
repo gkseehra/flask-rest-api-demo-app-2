@@ -6,7 +6,7 @@ from flask import Flask, request
 
 # Resources are usually mapped into database tables as well.
 
-from flask_restful import Resource, Api
+from flask_restful import Resource, Api, reqparse
 # JWT -> JSON Web Token
 from flask_jwt import JWT, jwt_required
 from security import authenticate, identity
@@ -25,6 +25,13 @@ items = []
 
 # Item Resource
 class Item(Resource):
+    # Using a parser to make sure only specific fields are updated.
+    parser = reqparse.RequestParser()
+    parser.add_argument('price',
+                        type=float,
+                        required=True,
+                        help='This field cannot be empty.')
+
     @jwt_required()
     def get(self, name):
         item = next(filter(lambda x: x['name'] == name, items), None)
@@ -36,10 +43,12 @@ class Item(Resource):
         # If the request does not have JSON attached or
         # if the content-type is set wrong in the header,
         # the below line will give an error.
-        request_data = request.get_json()
+        # request_data = request.get_json()
         # To overcome that problem - 2 ways -
         # 1. pass force=True--> will process the data even if the content-type is not set.
         # 2. pass silent=True--> will just return None.
+
+        request_data = Item.parser.parse_args()
         item = {'name': name, 'price': request_data['price']}
         items.append(item)
         # No need to convert dictionary to JSON, flask_restful takes care of it.
@@ -51,7 +60,9 @@ class Item(Resource):
         return {'message': 'Item deleted'}
 
     def put(self, name):
-        request_data = request.get_json()
+        request_data = Item.parser.parse_args()
+
+        # request_data = request.get_json()
         item = next(filter(lambda x: x['name'] == name, items), None)
         message = ''
         if item is None:
