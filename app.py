@@ -45,6 +45,25 @@ class Item(Resource):
         # No need to convert dictionary to JSON, flask_restful takes care of it.
         return item, 201
 
+    def delete(self, name):
+        global items
+        items = list(filter(lambda x: x['name'] != name, items))
+        return {'message': 'Item deleted'}
+
+    def put(self, name):
+        request_data = request.get_json()
+        item = next(filter(lambda x: x['name'] == name, items), None)
+        message = ''
+        if item is None:
+            # Add new item.
+            item = {'name': name, 'price': request_data['price']}
+            items.append(item)
+            message = 'Item successfully added.'
+        else:
+            item.update(request_data)
+            message = 'Item successfully updated.'
+        return {'message': message}
+
 
 class ItemList(Resource):
     def get(self):
